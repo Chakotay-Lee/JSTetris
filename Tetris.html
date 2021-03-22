@@ -1,0 +1,677 @@
+<html lang=“ja>
+<head>
+<meta charset=“UFT-8”>
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+<title>I'm ...what?</title>
+<style>
+body {
+	height: 80vh;
+	width: 80vw;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	background-color: yellow;
+}
+
+#GameConsole {
+	background-color: aqua;
+}
+
+.MainDiv {
+	color: red;
+	height: 600px;
+	width: 300px;
+	border: 2px solid #7a4;
+	position: relative;
+	overflow: hidden;
+}
+.gameOver {
+	width: 150px;
+	height: 50px;
+	background-color: #88aacc;
+	font-size: 30px;
+	margin-top: 75%;
+	margin-left: 25%;
+	color: red;
+	display: none;
+    justify-content: center;
+    align-items: center;
+	position: absolute;
+	border: 3px solid skyblue;
+}
+.ScoreDiv {
+	width: 150px;
+	height: 50px;
+	margin-left: 20px;
+	border: 3px solid green;
+	align-self: center;
+	display: flex;
+    justify-content: flex-end;
+    align-items: center;
+	font-family: "Arial Black", "Arial Bold", Gadget, sans-serif;
+	font-size: 35px;
+}
+
+.block {
+	position: absolute;
+	top: 0;
+	left: 90px;
+	display: flex;
+	flex-direction: column;
+}
+.block > div {
+	display: flex;
+	flex-direction: row;
+}
+.blockCell {
+	box-sizing: border-box;
+	float: left;
+	width: 30px;
+	height: 30px;
+}
+.block1 {
+	border: 5px solid;
+	border-color: #bcddeb #5ec3eb #00a8eb #8dd0eb;
+	background-color: #87ceeb;
+}
+.block2 {
+	border: 5px solid;
+	border-color: #0000ff #000066 #000033 #0000cc;
+	background-color: #000099;
+}
+.block3 {
+	border: 5px solid;
+	border-color: #ffa500 #664200 #332100 #cc8500;
+	background-color: #996300;
+}
+.block4 {
+	border: 5px solid;
+	border-color: #ffd700 #665700 #332b00 #ccad00;
+	background-color: #998200;
+}
+.block5 {
+	border: 5px solid;
+	border-color: #00ff00 #006600 #003300 #00cc00;
+	background-color: #009900;
+}
+.block6 {
+	border: 5px solid;
+	border-color: #EAD9FF #A16EFF #9057FF #C299FF;
+	background-color: #B384FF;
+}
+.block7 {
+	border: 5px solid;
+	border-color: #ff0000 #660000 #330000 #cc0000;
+	background-color: #990000;
+}
+</style>
+
+<script>
+	const unitSize = 30;
+	const consoleWidth = 10;
+	const consoleHeight = 20;
+	class Block {
+		constructor() {
+			this.selBlock = 1;
+			this.blocks = [];
+		}
+		// getBlock return the block date according to rCount
+		getBlock(rCount) {
+			// rCount; rotate count, 1 for clcok-wise, -1 for otherwise.
+			let nBlk = this.selBlock + rCount;
+			if (nBlk < 0) nBlk = 3;
+			if (nBlk > 3) nBlk = 0;
+			return this.blocks[nBlk];
+		}
+		rotate(rCount) {
+			this.selBlock += rCount;
+			if (this.selBlock < 0) this.selBlock = 3;
+			if (this.selBlock > 3) this.selBlock = 0;
+		}
+	}
+	class Block1 extends Block {
+		constructor(blockDiv) {
+			super();
+			this.class = 'block1';
+			this.blocks = [
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 4,
+					height: 1,
+					data: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 1,
+					height: 4,
+					data: [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]],
+				},
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 4,
+					height: 1,
+					data: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 2,
+					offsety: 0,
+					width: 1,
+					height: 4,
+					data: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
+				},
+			];
+		}
+	}
+	class Block2 extends Block {
+		constructor(blockDiv) {
+			super();
+			this.class = 'block2';
+			this.blocks = [
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [1, 0, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 1, 1, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+				},
+			];
+		}
+	}
+	class Block3 extends Block {
+		constructor(blockDiv) {
+			super();
+			this.class = 'block3';
+			this.blocks = [
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [0, 0, 1, 0], [1, 1, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]],
+				},
+			];
+		}
+	}
+	class Block4 extends Block {
+		constructor(blockDiv) {
+			super();
+			this.class = 'block4';
+			this.blocks = [
+				{
+					offsetx: 1,
+					offsety: 1,
+					width: 2,
+					height: 2,
+					data: [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 1,
+					width: 2,
+					height: 2,
+					data: [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 1,
+					width: 2,
+					height: 2,
+					data: [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 1,
+					width: 2,
+					height: 2,
+					data: [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+				},
+			];
+		}
+	}
+	class Block5 extends Block {
+		constructor(blockDiv) {
+			super();
+			this.class = 'block5';
+			this.blocks = [
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]],
+				},
+			];
+		}
+	}
+	class Block6 extends Block {
+		constructor(blockDiv) {
+			super();
+			this.class = 'block6';
+			this.blocks = [
+				{
+					offsetx: 1,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 1, 1], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 1, 0, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 3,
+					height: 2,
+					data: [[0, 1, 1, 1], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 2,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 0, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1], [0, 0, 0, 0]],
+				},
+			];
+		}
+	}
+	class Block7 extends Block {
+		constructor(blockDiv) {
+			super();
+			this.class = 'block7';
+			this.blocks = [
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 0,
+					offsety: 1,
+					width: 3,
+					height: 2,
+					data: [[0, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+				},
+				{
+					offsetx: 1,
+					offsety: 0,
+					width: 2,
+					height: 3,
+					data: [[0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
+				},
+			];
+		}
+	}
+</script>
+</head>
+<body onload="func()">
+<script>
+	class GameConsole {
+		constructor() {
+			this.width = consoleWidth;
+			this.height = consoleHeight;
+			this.blockY = 0;
+			this.blockX = 3;
+			this.count=0;
+			this.intervalId = null;
+			this.interval = 250;
+			this.fastmode = false;
+			this.score = 0;
+
+			this.blocks = Array.from(Array(consoleHeight), () => new Array(consoleWidth));
+			this.div = document.createElement('div');
+			this.div.setAttribute("id", "GameConsole");
+			this.div.setAttribute("class", "MainDiv");
+			this.div.style.width = unitSize*consoleWidth;
+			this.div.style.height = unitSize*consoleHeight;
+
+			this.gameOverDiv = document.createElement('div');
+			this.gameOverDiv.setAttribute("id", "GameOver");
+			this.gameOverDiv.setAttribute("class", "gameOver");
+			this.gameOverDiv.innerHTML = "GameOver";
+			this.div.appendChild(this.gameOverDiv);
+
+			this.blockDiv = document.createElement('div');
+			this.blockDiv.setAttribute("class", "block");
+			this.div.appendChild(this.blockDiv);
+
+			// add console fixed block;
+			for (let y = 0; y < consoleHeight; y++) {
+				let rowDiv = document.createElement('div');
+				for (let x = 0; x < consoleWidth; x++) {
+					let fixDiv = document.createElement('div');
+					fixDiv.setAttribute("id", "fixDiv_"+x+'_'+y);
+					fixDiv.setAttribute("class", "blockCell");
+					this.blocks[y][x] = {set: false, class: null, div: fixDiv};
+					rowDiv.appendChild(fixDiv);
+				}
+				this.div.appendChild(rowDiv);
+			}
+			this.createNewBlock();
+			document.body.appendChild(this.div);
+
+			this.scoreDiv = document.createElement('div');
+			this.scoreDiv.setAttribute("id", "Score");
+			this.scoreDiv.setAttribute("class", "ScoreDiv");
+			this.scoreDiv.innerHTML = this.score;
+			document.body.appendChild(this.scoreDiv);
+
+			this.start();
+		}
+
+		clear() {
+			for (let y = 0; y < this.height; y++) {
+				for (let x = 0; x < this.width; x++) {
+					this.blocks[y][x].set = false;
+					this.blocks[y][x].class = null;
+					this.blocks[y][x].setAttribute("class", "blockCell");
+				}
+			}
+		}
+
+		boundCheck(blockX, blockY, block) {
+			if (blockX + block.offsetx < 0) return true;
+			if (blockX + block.width + block.offsetx > consoleWidth) return true;
+			if (blockY + block.height + block.offsety > consoleHeight) return true;
+			for (let y = 0; y < 4; y++ ) {
+				for (let x = 0; x < 4; x++ ) {
+					if ((block.data[y][x] == 1) && ((blockY + y) >= 0) &&
+						(this.blocks[blockY + y][blockX + x].set == true)) {
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		renderBlock(className, block) {
+			let divData = '';
+			for (let y = 0; y < 4; y++) {
+				divData += '<div>';
+				for (let x = 0; x < 4; x++) {
+					if (block.data[y][x] == 1) {
+						divData += '<div class="blockCell ' + className + '"></div>'
+					} else {
+						divData += '<div class="blockCell"/></div>'
+					}
+				}
+				divData += '</div>';
+			}
+			this.blockDiv.innerHTML = divData;
+		}
+
+		createNewBlock() {
+			switch(Math.floor(Math.random() * Math.floor(7))) {
+				case 0:
+					this.curBlock = new Block1(this.blockDiv);
+					break;
+				case 1:
+					this.curBlock = new Block2(this.blockDiv);
+					break;
+				case 2:
+					this.curBlock = new Block3(this.blockDiv);
+					break;
+				case 3:
+					this.curBlock = new Block4(this.blockDiv);
+					break;
+				case 4:
+					this.curBlock = new Block5(this.blockDiv);
+					break;
+				case 5:
+					this.curBlock = new Block6(this.blockDiv);
+					break;
+				case 6:
+					this.curBlock = new Block7(this.blockDiv);
+					break;
+			}
+			this.blockY = -3;
+			// center the block;
+			this.blockX = Math.floor((consoleWidth - this.curBlock.getBlock(0).width)/2);
+			this.blockDiv.style.top = this.blockY*unitSize;
+			this.blockDiv.style.left = this.blockX*unitSize;
+			this.renderBlock(this.curBlock.class, this.curBlock.getBlock(0));
+		}
+		
+		// add block to console.
+		addBlocks(block) {
+			let className = this.curBlock.class;
+			for (let y = 0; y < 4; y++ ) {
+				for (let x = 0; x < 4; x++ ) {
+					if ((block.data[y][x] == 1) && ((this.blockY+y) >= 0)) {
+						let posX = this.blockX + x;
+						let posY = this.blockY + y;
+						this.blocks[posY][posX].set = true;
+						this.blocks[posY][posX].class = className;
+						this.blocks[posY][posX].div.setAttribute("class", "blockCell "+className);
+					}
+				}
+			}
+			// Check filled row.
+			let rRows = [];
+			let filledRow = 0;
+			for (let y = this.height - 1; y >= 0; y--) {
+				let filled = true;
+				for (let x = 0; x < this.width; x++) {
+					if (this.blocks[y][x].set == false) {
+						filled = false;
+						break;
+					}
+				}
+				if (filled == false) {
+					rRows.push(y);
+				} else {
+					filledRow++;
+				}
+			}
+			if (filledRow != 0) {
+				let y = this.height - 1;
+				let copyRows = [...this.blocks];
+				rRows.forEach(row => {
+					for (let x = 0; x < this.width; x++) {
+						this.blocks[y][x].set = copyRows[row][x].set;
+						this.blocks[y][x].class = copyRows[row][x].class;
+						if (copyRows[row][x].set == true) {
+							this.blocks[y][x].div.setAttribute("class", "blockCell "+copyRows[row][x].class);
+						} else {
+							this.blocks[y][x].div.setAttribute("class", "blockCell");
+						}
+					}
+					y--;
+				});
+				// clean rest row;
+				while (y >= 0) {
+					for (let x = 0; x < this.width; x++) {
+						this.blocks[y][x].set = false;
+						this.blocks[y][x].class = null;
+						this.blocks[y][x].div.setAttribute("class", "blockCell");
+					}
+					y--;
+				}
+				this.score += 100*filledRow;
+				this.showScore();
+			}
+		}
+		showScore() {
+			this.scoreDiv.innerHTML = this.score;
+		}
+
+		routine() {
+			if (this.blockDiv !== null) {
+				if (this.boundCheck(this.blockX, this.blockY + 1, this.curBlock.getBlock(0)) == false) {
+					this.blockY ++;
+					this.blockDiv.style.top = (this.blockY*unitSize);
+				} else {
+					console.log(this.blockY);
+					console.log(this.curBlock);
+
+					if (this.fastmode == true) {
+						this.stop();
+						this.fastmode = false;
+						this.interval = 250;
+						this.start();
+					}
+					if (this.blockY < 0) {
+						this.gameOver();
+					} else {
+						this.addBlocks(this.curBlock.getBlock(0));
+						this.score += 5;
+						this.showScore();
+						this.createNewBlock();
+					}
+				}
+			}
+			// clearInterval(this.intervalId);
+		}
+		blockGoLeft() {
+			if (this.boundCheck(this.blockX - 1, this.blockY, this.curBlock.getBlock(0)) == false) {
+				this.blockX --;
+				this.blockDiv.style.left = (this.blockX*unitSize);
+			}
+		}
+		blockGoRight() {
+			if (this.boundCheck(this.blockX + 1, this.blockY, this.curBlock.getBlock(0)) == false) {
+				this.blockX ++;
+				this.blockDiv.style.left = (this.blockX*unitSize);
+			}
+		}
+		rotateCW() {
+			if (this.boundCheck(this.blockX, this.blockY, this.curBlock.getBlock(1)) == false) {
+				this.curBlock.rotate(1);
+				this.renderBlock(this.curBlock.class, this.curBlock.getBlock(0));
+			}
+		}
+		fastDown() {
+			this.stop();
+			this.fastmode = true;
+			this.interval = 10;
+			this.start();
+		}
+		onKey(e) {
+			console.log(e.code);
+			if (this.curBlock != null) {
+				if (e.code === "ArrowUp") {
+					this.rotateCW();
+				} else if (e.code === "ArrowLeft") {
+					this.blockGoLeft();
+				} else if (e.code === "ArrowRight") {
+					this.blockGoRight();
+				} else if (e.code === "ArrowDown") {
+					this.fastDown();
+				}
+			}
+		}
+
+		start() {
+			if (this.intervalId == null) {
+				this.intervalId = setInterval(() => this.routine(), this.interval);
+			}
+		}
+		stop() {
+			if (this.intervalId != null)
+				clearInterval(this.intervalId);
+			this.intervalId = null;
+		}
+		gameOver() {
+			this.stop();
+			this.gameOverDiv.style.display = 'flex';
+		}
+	}
+
+	function func() {
+		// The first function.
+		let gameConsole = new GameConsole();
+		document.onkeydown = (e) => gameConsole.onKey(e);
+	}
+</script>
+
+</div>
+<div>
+	<div>Hello...</div>
+	<div>Hello...</div>
+</div>
+</body>
+</html>
