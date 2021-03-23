@@ -43,10 +43,21 @@ body {
 	position: absolute;
 	border: 3px solid skyblue;
 }
+.PauseDiv {
+	width: 100%;
+	height: 100%;
+	background-color: #aa88cc;
+	font-size: 30px;
+	color: blue;
+	display: none;
+    justify-content: center;
+    align-items: center;
+	position: absolute;
+	border: 3px solid skyblue;
+}
 .ScoreDiv {
 	width: 150px;
 	height: 50px;
-	margin-left: 20px;
 	border: 3px solid green;
 	align-self: center;
 	display: flex;
@@ -54,6 +65,71 @@ body {
     align-items: center;
 	font-family: "Arial Black", "Arial Bold", Gadget, sans-serif;
 	font-size: 35px;
+}
+
+.LevelDiv {
+	width: 50px;
+	height: 50px;
+	border: 3px solid green;
+	align-self: center;
+	display: flex;
+    justify-content: center;
+    align-items: center;
+	font-family: "Arial Black", "Arial Bold", Gadget, sans-serif;
+	font-size: 35px;
+}
+
+.PreviewDiv {
+	width: 120px;
+	height: 120px;
+	border: 3px solid green;
+	padding: 10px;
+	display: flex;
+    justify-content: center;
+    align-items: center;
+	flex-direction: column;
+}
+
+.PadDiv {
+	display: flex;
+	flex-direction: column;
+    justify-content: center;
+    align-items: center;
+	cursor: pointer;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+.PadDiv > div{
+	display: flex;
+	flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.PadDiv > div > div {
+	display: flex;
+	flex-direction: row;
+    justify-content: center;
+    align-items: center;
+	font-family: "Arial Black", "Arial Bold", Gadget, sans-serif;
+	font-size: 60px;
+	width: 100px;
+}
+
+.usageDiv {
+	font-family: "Arial Black", "Arial Bold", Gadget, sans-serif;
+	border: 3px solid #ccc;
+}
+
+.DisplayDiv {
+	display: flex;
+	flex-direction: column;
+    justify-content: center;
+    align-items: center;
+	margin-left: 20px;
 }
 
 .block {
@@ -116,7 +192,7 @@ body {
 	const consoleHeight = 20;
 	class Block {
 		constructor() {
-			this.selBlock = 1;
+			this.selBlock = 0;
 			this.blocks = [];
 		}
 		// getBlock return the block date according to rCount
@@ -397,26 +473,23 @@ body {
 			this.blockX = 3;
 			this.count=0;
 			this.intervalId = null;
-			this.interval = 250;
 			this.fastmode = false;
 			this.score = 0;
+			this.level = 0;
+			this.pauseMode = false;
+			// levels is composed with score and time interval.
+			this.levels = [[0, 1500], [500, 1000], [1000, 800], [3000, 500], [5000, 300], [7000, 250], [10000, 200], [15000, 150], [20000, 100], [30000, 50]]
+			this.interval = this.levels[this.level][1];
 
 			this.blocks = Array.from(Array(consoleHeight), () => new Array(consoleWidth));
-			this.div = document.createElement('div');
-			this.div.setAttribute("id", "GameConsole");
-			this.div.setAttribute("class", "MainDiv");
+			this.div = document.getElementById("GameConsole");
 			this.div.style.width = unitSize*consoleWidth;
 			this.div.style.height = unitSize*consoleHeight;
 
-			this.gameOverDiv = document.createElement('div');
-			this.gameOverDiv.setAttribute("id", "GameOver");
-			this.gameOverDiv.setAttribute("class", "gameOver");
-			this.gameOverDiv.innerHTML = "GameOver";
-			this.div.appendChild(this.gameOverDiv);
-
-			this.blockDiv = document.createElement('div');
-			this.blockDiv.setAttribute("class", "block");
-			this.div.appendChild(this.blockDiv);
+			this.gameOverDiv = document.getElementById('GameOver');
+			this.pauseDiv = document.getElementById('Pause');
+			this.blockDiv = document.getElementById('block');
+			this.previewDiv = document.getElementById('Preview');
 
 			// add console fixed block;
 			for (let y = 0; y < consoleHeight; y++) {
@@ -431,13 +504,10 @@ body {
 				this.div.appendChild(rowDiv);
 			}
 			this.createNewBlock();
-			document.body.appendChild(this.div);
-
-			this.scoreDiv = document.createElement('div');
-			this.scoreDiv.setAttribute("id", "Score");
-			this.scoreDiv.setAttribute("class", "ScoreDiv");
+			this.levelDiv = document.getElementById('Level');
+			this.levelDiv.innerHTML = this.level + 1;
+			this.scoreDiv = document.getElementById('Score');
 			this.scoreDiv.innerHTML = this.score;
-			document.body.appendChild(this.scoreDiv);
 
 			this.start();
 		}
@@ -468,7 +538,7 @@ body {
 			return false;
 		}
 
-		renderBlock(className, block) {
+		renderBlock(className, block, blockDiv) {
 			let divData = '';
 			for (let y = 0; y < 4; y++) {
 				divData += '<div>';
@@ -476,44 +546,63 @@ body {
 					if (block.data[y][x] == 1) {
 						divData += '<div class="blockCell ' + className + '"></div>'
 					} else {
-						divData += '<div class="blockCell"/></div>'
+						divData += '<div class="blockCell"></div>'
 					}
 				}
 				divData += '</div>';
 			}
-			this.blockDiv.innerHTML = divData;
+			blockDiv.innerHTML = divData;
+		}
+
+		// Make the Block in the center of PreviewDiv
+		renderPreviewBlock(className, block, blockDiv) {
+			let divData = '';
+			for (let y = 0; y < block.height; y++) {
+				divData += '<div>';
+				for (let x = 0; x < block.width; x++) {
+					if (block.data[y+block.offsety][x+block.offsetx] == 1) {
+						divData += '<div class="blockCell ' + className + '"></div>'
+					} else {
+						divData += '<div class="blockCell"></div>'
+					}
+				}
+				divData += '</div>';
+			}
+			blockDiv.innerHTML = divData;
 		}
 
 		createNewBlock() {
-			switch(Math.floor(Math.random() * Math.floor(7))) {
-				case 0:
-					this.curBlock = new Block1(this.blockDiv);
-					break;
-				case 1:
-					this.curBlock = new Block2(this.blockDiv);
-					break;
-				case 2:
-					this.curBlock = new Block3(this.blockDiv);
-					break;
-				case 3:
-					this.curBlock = new Block4(this.blockDiv);
-					break;
-				case 4:
-					this.curBlock = new Block5(this.blockDiv);
-					break;
-				case 5:
-					this.curBlock = new Block6(this.blockDiv);
-					break;
-				case 6:
-					this.curBlock = new Block7(this.blockDiv);
-					break;
+			const rendomGen = () => {
+				switch(Math.floor(Math.random() * Math.floor(700)) % 7) {
+					case 0:
+						return new Block1();
+					case 1:
+						return new Block2();
+					case 2:
+						return new Block3();
+					case 3:
+						return new Block4();
+					case 4:
+						return new Block5();
+					case 5:
+						return new Block6();
+					case 6:
+						return new Block7();
+				}
 			}
-			this.blockY = -3;
+			if (this.curBlock === undefined) {
+				this.curBlock = rendomGen();
+			} else {
+				this.curBlock = this.nextBlock;
+			}
+			this.nextBlock = rendomGen();
+			this.blockY = -this.curBlock.getBlock(0).offsety;
 			// center the block;
-			this.blockX = Math.floor((consoleWidth - this.curBlock.getBlock(0).width)/2);
+			this.blockX = Math.floor((consoleWidth - this.curBlock.getBlock(0).width)/2) + this.curBlock.getBlock(0).offsetx;
 			this.blockDiv.style.top = this.blockY*unitSize;
 			this.blockDiv.style.left = this.blockX*unitSize;
-			this.renderBlock(this.curBlock.class, this.curBlock.getBlock(0));
+			this.renderBlock(this.curBlock.class, this.curBlock.getBlock(0), this.blockDiv);
+			this.renderPreviewBlock(this.nextBlock.class, this.nextBlock.getBlock(0), this.previewDiv);
 		}
 		
 		// add block to console.
@@ -573,10 +662,22 @@ body {
 				}
 				this.score += 100*filledRow;
 				this.showScore();
+				this.checkLevel();
 			}
 		}
 		showScore() {
 			this.scoreDiv.innerHTML = this.score;
+		}
+		showLevel() {
+			this.levelDiv.innerHTML = this.level + 1;
+		}
+		checkLevel() {
+			if (this.level < this.levels.length - 1) {
+				if (this.score > this.levels[this.level + 1][0]) {
+					this.level++;
+					this.showLevel();
+				}
+			}
 		}
 
 		routine() {
@@ -585,13 +686,10 @@ body {
 					this.blockY ++;
 					this.blockDiv.style.top = (this.blockY*unitSize);
 				} else {
-					console.log(this.blockY);
-					console.log(this.curBlock);
-
 					if (this.fastmode == true) {
 						this.stop();
 						this.fastmode = false;
-						this.interval = 250;
+						this.interval = this.levels[this.level][1];
 						this.start();
 					}
 					if (this.blockY < 0) {
@@ -600,11 +698,11 @@ body {
 						this.addBlocks(this.curBlock.getBlock(0));
 						this.score += 5;
 						this.showScore();
+						this.checkLevel();
 						this.createNewBlock();
 					}
 				}
 			}
-			// clearInterval(this.intervalId);
 		}
 		blockGoLeft() {
 			if (this.boundCheck(this.blockX - 1, this.blockY, this.curBlock.getBlock(0)) == false) {
@@ -621,7 +719,7 @@ body {
 		rotateCW() {
 			if (this.boundCheck(this.blockX, this.blockY, this.curBlock.getBlock(1)) == false) {
 				this.curBlock.rotate(1);
-				this.renderBlock(this.curBlock.class, this.curBlock.getBlock(0));
+				this.renderBlock(this.curBlock.class, this.curBlock.getBlock(0), this.blockDiv);
 			}
 		}
 		fastDown() {
@@ -641,6 +739,8 @@ body {
 					this.blockGoRight();
 				} else if (e.code === "ArrowDown") {
 					this.fastDown();
+				} else if (e.code === "KeyP") {
+					this.pause();
 				}
 			}
 		}
@@ -655,23 +755,56 @@ body {
 				clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
+		pause() {
+			if (this.pauseMode == false) {
+				this.stop();
+				this.pauseMode = true;
+				this.pauseDiv.style.display = 'flex';
+			} else {
+				this.start();
+				this.pauseMode = false;
+				this.pauseDiv.style.display = 'none';
+			}
+		}
 		gameOver() {
 			this.stop();
 			this.gameOverDiv.style.display = 'flex';
 		}
 	}
 
+	let gameConsole = null;
 	function func() {
 		// The first function.
-		let gameConsole = new GameConsole();
+		gameConsole = new GameConsole();
 		document.onkeydown = (e) => gameConsole.onKey(e);
 	}
 </script>
-
+<div class="usageDiv">
+USAGE<br/>
+Left: Move To Left<br/>
+Right: Move To Right<br/>
+Down: Fast Drop<br/>
+Up: Rotate block CW<br/>
+P: Pause<br/>
 </div>
-<div>
-	<div>Hello...</div>
-	<div>Hello...</div>
+<div id="GameConsole" class="MainDiv">
+	<div id="GameOver" class="gameOver">GameOver</div>
+	<div id="block" class="block"></div>
+	<div id="Pause" class="PauseDiv">Pause</div>
+</div>
+<div class="DisplayDiv">
+	NEXT<div id="Preview" class="PreviewDiv"></div>
+	LEVEL<div id="Level" class="LevelDiv"></div>
+	SCORE<div id="Score" class="ScoreDiv"></div>
+	PAD<div class="PadDiv">
+		<div><div onclick='(function(){gameConsole.rotateCW(); })();'>ᐃ</div></div>
+		<div>
+			<div onclick='(function(){gameConsole.blockGoLeft(); })();'>ᐊ</div>
+			<div onclick='(function(){gameConsole.rotateCW(); })();'>↻</div>
+			<div onclick='(function(){gameConsole.blockGoRight(); })();'>ᐅ</div>
+		</div>
+		<div><div onclick='(function(){gameConsole.fastDown(); })();'>ᐁ</div></div>
+		</div>
 </div>
 </body>
 </html>
