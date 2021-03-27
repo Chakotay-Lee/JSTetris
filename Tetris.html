@@ -25,6 +25,7 @@ body {
 	color: red;
 	height: 600px;
 	width: 300px;
+	min-width: 300px;
 	border: 2px solid #7a4;
 	position: relative;
 	overflow: hidden;
@@ -130,6 +131,25 @@ body {
     justify-content: center;
     align-items: center;
 	margin-left: 20px;
+}
+
+.Ranking {
+	font-family: "Arial Black", "Arial Bold", Gadget, sans-serif;
+	border: 3px solid #ccc;
+	display: flex;
+	flex-direction: row;
+	justify-content: stretch;
+	align-items: stretch;
+}
+
+.Ranking table{
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.Ranking table td,th{
+	border: 1px solid #555;
+	text-align: center;
 }
 
 .block {
@@ -481,6 +501,8 @@ body {
 			this.levels = [[0, 1500], [500, 1000], [1000, 800], [3000, 500], [5000, 300], [7000, 250], [10000, 200], [15000, 150], [20000, 100], [30000, 50]]
 			this.interval = this.levels[this.level][1];
 
+			this.ranking = [];
+
 			this.blocks = Array.from(Array(consoleHeight), () => new Array(consoleWidth));
 			this.div = document.getElementById("GameConsole");
 			this.div.style.width = unitSize*consoleWidth;
@@ -503,6 +525,8 @@ body {
 				}
 				this.div.appendChild(rowDiv);
 			}
+			this.loadRanking();
+			this.updateRanking();
 			this.createNewBlock();
 			this.levelDiv = document.getElementById('Level');
 			this.levelDiv.innerHTML = this.level + 1;
@@ -511,6 +535,50 @@ body {
 
 			this.start();
 		}
+
+		loadRanking() {
+			let ranking = localStorage.getItem("Ranking");
+			if (ranking) {
+				this.ranking = JSON.parse(ranking);
+				this.ranking.sort((a, b) => {return (a.score > b.score)?-1:(a.score == b.score)?0:1});
+			}
+		}
+		saveRanking() {
+			localStorage.setItem("Ranking", JSON.stringify(this.ranking));			
+		}
+		updateRanking() {
+			let rankingDiv = document.getElementById("Ranking");
+			let htmlStr = "<table><thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Date</th></tr></thead><tbody>";
+			htmlStr += this.ranking.map((rank, idx) => {
+				return "<tr><td>"+(idx+1)+"</td><td>"+rank.name+"</td><td>"+rank.score+"</td><td nowrap>"+rank.date+"</td></tr>";
+			}).join('')
+			htmlStr += "</tbody></table>";
+			rankingDiv.innerHTML = htmlStr;
+		}
+		addRanking() {
+			let ranking = (this.ranking.length == 0)?0:-1;
+			let now = new Date();
+			let dateStr = now.getFullYear() + '/' + ('0' + (now.getMonth() + 1)).slice(-2) + '/' + ('0' + now.getDate()).slice(-2) + ' ' +
+						  ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+			for (let i = 0; i < this.ranking.length; i++) {
+				if (this.score > this.ranking[i].score) {
+					ranking = i;
+					break;
+				}
+			}
+			if ((ranking == -1) && (this.ranking.length < 10))
+				ranking = this.ranking.length;
+			if (ranking != -1) {
+				let name = prompt("Congratulation! You are ranked as top "+(ranking+1)+", please leave you name here.");
+				if (name.length === 0)
+					name = "Anonymous";
+				this.ranking.push({name: name, score: this.score, date: dateStr});
+				this.ranking.sort((a, b) => {return (a.score > b.score)?-1:(a.score == b.score)?0:1});
+				this.ranking = this.ranking.slice(0,10);
+				this.saveRanking();
+				this.updateRanking();
+			}
+		};
 
 		clear() {
 			for (let y = 0; y < this.height; y++) {
@@ -729,7 +797,7 @@ body {
 			this.start();
 		}
 		onKey(e) {
-			console.log(e.code);
+			// console.log(e.code);
 			if (this.curBlock != null) {
 				if (e.code === "ArrowUp") {
 					this.rotateCW();
@@ -769,6 +837,7 @@ body {
 		gameOver() {
 			this.stop();
 			this.gameOverDiv.style.display = 'flex';
+			this.addRanking();
 		}
 	}
 
@@ -779,6 +848,7 @@ body {
 		document.onkeydown = (e) => gameConsole.onKey(e);
 	}
 </script>
+<div style="height: 100%">
 <div class="usageDiv">
 USAGE<br/>
 Left: Move To Left<br/>
@@ -786,6 +856,13 @@ Right: Move To Right<br/>
 Down: Fast Drop<br/>
 Up: Rotate block CW<br/>
 P: Pause<br/>
+</div>
+<div style="margin-top: 20px;">TOP 10</div>
+<div id="Ranking" class="Ranking">
+	<div>Name</div>
+	<div>Score</div>
+	<div>Date</div>
+</div>
 </div>
 <div id="GameConsole" class="MainDiv">
 	<div id="GameOver" class="gameOver">GameOver</div>
